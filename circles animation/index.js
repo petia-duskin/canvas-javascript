@@ -26,8 +26,8 @@ class Particle {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 25 + 1;
-        this.speedX = Math.random() * 3 - 1.5;
-        this.speedY = Math.random() * 3 - 1.5
+        this.speedX = Math.random() * 2 - 1.5;
+        this.speedY = Math.random() * 2 - 1.5
     }
 
     update() {
@@ -37,6 +37,7 @@ class Particle {
 
     draw() {
         ctx.fillStyle = 'green'
+        ctx.globalCompositeOperation = "lighter";
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
@@ -44,7 +45,7 @@ class Particle {
 }
 
 function init() {
-    createParticles(100);
+    createParticles(1000);
 }
 
 function createParticles(count) {
