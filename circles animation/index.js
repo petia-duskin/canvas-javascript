@@ -25,7 +25,7 @@ class Particle {
     constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 25 + 1;
+        this.size = Math.random() * 50 + 1;
         this.speedX = Math.random() * 2 - 1.5;
         this.speedY = Math.random() * 2 - 1.5
     }
@@ -33,6 +33,7 @@ class Particle {
     update() {
         this.x += this.speedX;
         this.y += this.speedY;
+        if (this.size > 0.2) this.size -= 0.01;
     }
 
     draw() {
@@ -45,7 +46,7 @@ class Particle {
 }
 
 function init() {
-    createParticles(1000);
+    createParticles(415);
 }
 
 function createParticles(count) {
@@ -54,23 +55,23 @@ function createParticles(count) {
     }
 }
 
-function triggerUpdateParticles() {
+function handleParticles() {
     for (let i = 0; i < particlesArray.length; i++) {
         particlesArray[i].update();
+        particlesArray[i].draw();
+        if (particlesArray[i].size <= 0.5) {
+            particlesArray.splice(i, 1);
+            i--;
+        }
     }
 }
 
-function drawParticles() {
-    for (let i = 0; i < particlesArray.length; i++) {
-        particlesArray[i].draw();
-    }
-}
 
 init();
+
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    triggerUpdateParticles();
-    drawParticles();
+    handleParticles();
     requestAnimationFrame(animate)
 }
 
