@@ -1,20 +1,20 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth
-canvas.height = window.innerHeight
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-})
+const ROOT_X = canvas.width / 2;
+const ROOT_Y = 100;
+const NODES_OFFSET = canvas.width / 4;
+const LEVEL_OFFSET = 70;
 
 class Node {
     leftChild = null;
     rightChild = null;
     value = null;
-    x = undefined;
-    y = undefined;
+    radius = 25;
+    fontSize = 17
 
 
     constructor(value, x, y) {
@@ -25,102 +25,78 @@ class Node {
 
     drawNode() {
         ctx.beginPath();
-        ctx.fillStyle = 'white'
-        ctx.arc(this.x, this.y, 30, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFDBBB';
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
         ctx.fill();
+
+
+        // draw value inside node
+        ctx.font = `${this.fontSize}px Arial`
+        ctx.fillStyle = 'blue'
+        const textMetrics = ctx.measureText(this.value);
+        const textWidth = textMetrics.width;
+        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+        const xCenter = this.x - textWidth / 2;
+        const yCenter = this.y + textHeight / 2;
+
+        ctx.fillText(this.value, xCenter, yCenter)
     }
 
-    drawEdge(targetX, targetY) {
+    drawEdge(toX, toY) {
         ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "white";
-        ctx.moveTo(this.x, this.y)
-        ctx.lineTo(targetX, targetY)
+        ctx.moveTo(this.x, this.y);
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineTo(toX, toY);
         ctx.stroke();
     }
-
-    draw
-}
-
-const LEVEL_HEIGHT = 40;
-const ROOT_X = canvas.width / 2;
-const ROOT_Y = 50;
-
-function drawLine(fromX, fromY, toX, toY) {
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "white";
-    ctx.moveTo(fromX, fromY)
-    ctx.lineTo(toX, toY)
-    ctx.stroke();
 }
 
 class BinaryTree {
     root = null;
-
-    // insert(value) {
-    //     if (this.isEmpty()) {
-    //         this.initialize(value);
-    //         return;
-    //     }
-    //
-    //     nodeY += 50;
-    //     let current = this.root;
-    //
-    //     while (true) {
-    //         if (value < current.value) {
-    //             if (current.leftChild == null) {
-    //                 nodeXLeft -= 100;
-    //                 const newNode = new Node(value, nodeXLeft, nodeY);
-    //                 current.leftChild = newNode;
-    //                 current.drawEdge(newNode.x, newNode.y)
-    //                 newNode.drawNode();
-    //                 return;
-    //             }
-    //             current = current.leftChild;
-    //         } else if (value > current.value) {
-    //             if (current.rightChild == null) {
-    //                 nodeXRight += 100;
-    //                 const newNode = new Node(value, nodeXRight, nodeY);
-    //                 current.rightChild = newNode;
-    //                 current.drawEdge(newNode.x, newNode.y)
-    //                 newNode.drawNode();
-    //                 return;
-    //             }
-    //             current = current.rightChild;
-    //         }
-    //     }
-    // }
+    count = 0
 
     insert(value) {
-        this.root = this.insert_recursive(this.root, value, ROOT_X, ROOT_Y, canvas.width / 4);
+        this.root = this._insert_recursive(this.root, null, value, ROOT_X, ROOT_Y, NODES_OFFSET);
+        this.root.drawNode();
     }
 
-    insert_recursive(node, value, x, y, offsetX) {
+    _insert_recursive(node, prev, value, x, y, offset) {
         if (node == null) {
-            return new Node(value, ROOT_X, ROOT_Y)
+            const newNode = new Node(value, x, y);
+            if (prev != null) {
+                prev.drawEdge(newNode.x, newNode.y)
+            }
+            return newNode;
+        }
+
+        if (x < node.radius * 2 || x > canvas.width - node.radius * 2) {
+            console.log("x", x)
+            canvas.style.overflow = 'auto'
+        }
+
+        if (y < node.radius * 2 || y > canvas.height - node.radius * 2) {
+            console.log("y", y)
+            canvas.style.overflow = 'auto'
+        }
+
+        if (offset < node.radius * 10) {
+            offset = node.radius * 2;
         }
 
         if (value < node.value) {
-            node.leftChild.drawEdge(node.x, node.y)
-            node.leftChild.drawNode();
-            node.leftChild = this.insert_recursive(node.leftChild, value, x - offsetX, y + LEVEL_HEIGHT, offsetX / 2);
+            const newNode = this._insert_recursive(node.leftChild, node, value, x - offset, y + LEVEL_OFFSET, offset / 2);
+            node.leftChild = newNode;
+            newNode.drawNode();
         } else if (value > node.value) {
-            node.rightChild.drawEdge(node.x, node.y)
-            node.rightChild.drawNode();
-            node.rightChild = this.insert_recursive(node.rightChild, value, x + offsetX, y + LEVEL_HEIGHT, offsetX / 2);
+            const newNode = this._insert_recursive(node.rightChild, node, value, x + offset, y + LEVEL_OFFSET, offset / 2);
+            node.rightChild = newNode;
+            newNode.drawNode();
         }
 
+        this.count++;
         return node;
     }
 
-
-
-    initialize(value) {
-        const node = new Node(value, canvas.width / 2, 100);
-        node.drawNode();
-        this.root = node;
-    }
 
     traversePreOrder() {
         if (this.isEmpty()) {
@@ -145,10 +121,19 @@ class BinaryTree {
     }
 }
 
-const tree = new BinaryTree()
-tree.insert(10);
-tree.insert(12);
-tree.insert(5);
-tree.insert(3);
-tree.insert(7);
-tree.insert(11);
+
+const tree = new BinaryTree();
+const arr = []
+
+function generateRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function fillTree(count) {
+    tree.insert(0)
+    for (let i = 0; i < count; i++) {
+        tree.insert(generateRandomInt(-200, 200))
+    }
+}
+
+fillTree(10)
